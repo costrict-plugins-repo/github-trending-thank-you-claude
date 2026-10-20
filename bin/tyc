@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+"""
+tyc — Thank You Claude CLI
+Bundled binary for the thank-you-claude Claude Code plugin.
+
+Commands:
+  tyc send       Send one appreciation message immediately (via CLI)
+  tyc status     Check usage and reset timing
+  tyc watch      Run the automated weekly watcher (long-running)
+  tyc preview    Preview a randomly assembled message without sending
+  tyc setup      First-time setup: install statusline wrapper, create scheduled tasks
+  tyc uninstall  Remove statusline wrapper and restore original settings
+  tyc precheck   Check if reset time shifted and update tasks (runs 24h before reset)
+  tyc run        Execute weekly check+send (called by scheduled task)
+"""
+
+import sys
+import os
+
+# Resolve plugin root (bin/ is one level down from plugin root)
+PLUGIN_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PLUGIN_ROOT)
+
+from tyc_core import send, status, watch, preview
+from tyc_scheduler import setup, run, precheck, uninstall
+
+COMMANDS = {
+    "send":     send,
+    "status":   status,
+    "watch":    watch,
+    "preview":  preview,
+    "setup":    setup,
+    "uninstall": uninstall,
+    "precheck": precheck,
+    "run":      run,
+}
+
+def main():
+    if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
+        print(__doc__)
+        print(f"Available commands: {', '.join(COMMANDS)}")
+        sys.exit(1)
+    result = COMMANDS[sys.argv[1]]()
+    # Propagate exit code for setup/run (they return bool)
+    if result is False:
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
